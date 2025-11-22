@@ -15,6 +15,9 @@ class Paginator extends EventTarget {
         this.pageIndex = startPage - 1;
         this._name = name;
         this._root = document.getElementById(id);
+        if (!this._root) {
+            throw new Error("No root element found");
+        }
         if (!this._root.classList.contains("paginator")) {
             this._root.classList.add("paginator");
         }

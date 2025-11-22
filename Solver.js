@@ -1,7 +1,4 @@
 "use strict";
-function yield() {
-    return new Promise(r => setTimeout(r, 1));
-}
 class Solver {
     constructor(weights = {}) {
         this.setWeights(weights.buildRate, weights.expBonus, weights.flaggy);
@@ -59,8 +56,9 @@ class Solver {
             const cogKey = allKeys[Math.floor(Math.random() * allKeys.length)];
             const slot = state.get(slotKey);
             const cog = state.get(cogKey);
-            if (slot.fixed || cog.fixed || cog.position().location === "build")
+            if (slot.fixed || cog.fixed || cog.position().location === "build") {
                 continue;
+            }
             state.move(slotKey, cogKey);
             const scoreSumUpdate = this.getScoreSum(state.score);
             if (scoreSumUpdate > currentScore) {
@@ -94,8 +92,9 @@ class Solver {
             const cogKey = allKeys[Math.floor(Math.random() * allKeys.length)];
             const slot = inventory.get(slotKey);
             const cog = inventory.get(cogKey);
-            if (slot.fixed || cog.fixed || cog.position().location === "build")
+            if (slot.fixed || cog.fixed || cog.position().location === "build") {
                 continue;
+            }
             inventory.move(slotKey, cogKey);
         }
     }
@@ -110,11 +109,16 @@ class Solver {
             const cog2Key = cog1.initialKey;
             inventory.move(cog1Key, cog2Key);
             const changed = inventory.score;
-            if (changed.buildRate === goal.buildRate
-                && changed.flaggy === goal.flaggy
-                && changed.expBonus === goal.expBonus
-                && changed.expBoost === goal.expBoost
-                && changed.flagBoost === goal.flagBoost) {
+            if (changed.buildRate ===
+                goal.buildRate &&
+                changed.flaggy ===
+                    goal.flaggy &&
+                changed.expBonus ===
+                    goal.expBonus &&
+                changed.expBoost ===
+                    goal.expBoost &&
+                changed.flagBoost ===
+                    goal.flagBoost) {
                 console.log(`Removed useless move ${cog1Key} to ${cog2Key}`);
                 continue;
             }

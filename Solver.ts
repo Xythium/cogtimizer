@@ -1,7 +1,3 @@
-function yield() {
-    return new Promise(r => setTimeout(r, 1));
-}
-
 class Solver {
     constructor(weights = {}) {
         this.setWeights(weights.buildRate, weights.expBonus, weights.flaggy);

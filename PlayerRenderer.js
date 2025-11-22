@@ -75,7 +75,11 @@ class PlayerRenderer {
         const ctx = this._player.context;
         ctx.clearRect(0, 0, this.width, this.height);
         // this._colorHead(Math.random(), Math.random(), Math.random());
-        ctx.drawImage(this._head.canvas, hw - headW * this.scale * .5, defaultYOffset + hh - headH * this.scale * .5, headW * this.scale, headH * this.scale);
+        ctx.drawImage(this._head.canvas, hw - headW * this.scale * .5, defaultYOffset +
+            hh -
+            headH *
+                this.scale *
+                .5, headW * this.scale, headH * this.scale);
         const sw = 30, sh = 50;
         const cols = 10, rows = 9;
         // The hat with index 1 is hat 7 in the image
@@ -85,7 +89,12 @@ class PlayerRenderer {
         const col = index % 10;
         const swScaled = sw * this.scale;
         const shScaled = sh * this.scale;
-        ctx.drawImage(this._hatsImg, col * sw, row * sh, sw, sh, hw - swScaled * .5 - 2 * this.scale, defaultYOffset + hh - shScaled * .5 + 1 * this.scale, swScaled, shScaled);
+        ctx.drawImage(this._hatsImg, col * sw, row * sh, sw, sh, hw - swScaled * .5 - 2 * this.scale, defaultYOffset +
+            hh -
+            shScaled *
+                .5 +
+            1 *
+                this.scale, swScaled, shScaled);
         return this._player.canvas.toDataURL();
     }
 }
