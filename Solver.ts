@@ -1,11 +1,12 @@
-"use strict";
 function yield() {
     return new Promise(r => setTimeout(r, 1));
 }
+
 class Solver {
     constructor(weights = {}) {
         this.setWeights(weights.buildRate, weights.expBonus, weights.flaggy);
     }
+
     setWeights(buildRate, expBonus, flaggy) {
         this.weights = {
             buildRate: buildRate,
@@ -13,6 +14,7 @@ class Solver {
             flaggy: flaggy
         };
     }
+
     getScoreSum(score) {
         let res = 0;
         res += score.buildRate * this.weights.buildRate;
@@ -20,9 +22,11 @@ class Solver {
         res += score.flaggy * this.weights.flaggy * (score.flagBoost + 4) / 4;
         return res;
     }
+
     static _yield() {
         return new Promise(r => setTimeout(r, 1));
     }
+
     /**
      * solveTime: Number - Time in ms how long the solver should run
      */
@@ -39,6 +43,7 @@ class Solver {
         const allSlots = inventory.availableSlotKeys;
         let counter = 0;
         let currentScore = this.getScoreSum(state.score);
+
         console.log("Trying to optimize");
         while (Date.now() - startTime < solveTime) {
             if (Date.now() - lastYield > 100) {
@@ -59,14 +64,15 @@ class Solver {
             const cogKey = allKeys[Math.floor(Math.random() * allKeys.length)];
             const slot = state.get(slotKey);
             const cog = state.get(cogKey);
-            if (slot.fixed || cog.fixed || cog.position().location === "build")
+
+            if (slot.fixed || cog.fixed || cog.position().location === "build") {
                 continue;
+            }
             state.move(slotKey, cogKey);
             const scoreSumUpdate = this.getScoreSum(state.score);
             if (scoreSumUpdate > currentScore) {
                 currentScore = scoreSumUpdate;
-            }
-            else {
+            } else {
                 state.move(slotKey, cogKey);
             }
         }
@@ -78,13 +84,13 @@ class Solver {
         if (g.best === null || this.getScoreSum(g.best.score) < scores[bestIndex]) {
             console.log("Best solution was number", bestIndex);
             g.best = best;
-        }
-        else {
+        } else {
             best = g.best;
         }
         this.removeUselesMoves(best);
         return best;
     }
+
     shuffle(inventory, n = 500) {
         const allSlots = inventory.availableSlotKeys;
         for (let i = 0; i < n; i++) {
@@ -94,15 +100,18 @@ class Solver {
             const cogKey = allKeys[Math.floor(Math.random() * allKeys.length)];
             const slot = inventory.get(slotKey);
             const cog = inventory.get(cogKey);
-            if (slot.fixed || cog.fixed || cog.position().location === "build")
+
+            if (slot.fixed || cog.fixed || cog.position().location === "build") {
                 continue;
+            }
             inventory.move(slotKey, cogKey);
         }
     }
+
     removeUselesMoves(inventory) {
         const goal = inventory.score;
         const cogsToMove = Object.values(inventory.cogs)
-            .filter((c) => c.key !== c.initialKey);
+                                 .filter((c) => c.key !== c.initialKey);
         // Check if move still changes something
         for (let i = 0; i < cogsToMove.length; i++) {
             const cog1 = cogsToMove[i];
@@ -110,12 +119,18 @@ class Solver {
             const cog2Key = cog1.initialKey;
             inventory.move(cog1Key, cog2Key);
             const changed = inventory.score;
-            if (changed.buildRate === goal.buildRate
-                && changed.flaggy === goal.flaggy
-                && changed.expBonus === goal.expBonus
-                && changed.expBoost === goal.expBoost
-                && changed.flagBoost === goal.flagBoost) {
+            if (changed.buildRate ===
+                goal.buildRate &&
+                changed.flaggy ===
+                goal.flaggy &&
+                changed.expBonus ===
+                goal.expBonus &&
+                changed.expBoost ===
+                goal.expBoost &&
+                changed.flagBoost ===
+                goal.flagBoost) {
                 console.log(`Removed useless move ${cog1Key} to ${cog2Key}`);
+
                 continue;
             }
             inventory.move(cog1Key, cog2Key);

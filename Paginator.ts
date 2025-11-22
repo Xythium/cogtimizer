@@ -1,47 +1,75 @@
-"use strict";
 class PageEvent extends Event {
-    constructor(type, page, dir) {
+    page;
+    dir;
+
+    constructor(type: string, page: number, dir: "goto" | "prev" | "next") {
         super(type);
         this.page = page;
         this.dir = dir;
     }
 }
+
 class Paginator extends EventTarget {
-    constructor(id, pageCount, startPage = 1, name = "Page") {
+    pageCount = 1;
+    pageIndex = 0;
+    startPage;
+
+    _root;
+    _prevElem;
+    _pageElem;
+    _nextElem;
+
+    _name;
+
+    constructor(id: string, pageCount: number, startPage: number = 1, name: string = "Page") {
         super();
-        this.pageCount = 1;
-        this.pageIndex = 0;
+
         this.pageCount = pageCount;
         this.pageIndex = startPage - 1;
+
         this._name = name;
+
         this._root = document.getElementById(id);
+        if (!this._root) {
+            throw new Error("No root element found");
+        }
+
         if (!this._root.classList.contains("paginator")) {
             this._root.classList.add("paginator");
         }
+
         this._prevElem = document.createElement("div");
         this._prevElem.addEventListener("click", this.prev.bind(this));
         this._root.appendChild(this._prevElem);
+
         this._pageElem = document.createElement("div");
         this._root.appendChild(this._pageElem);
+
         this._nextElem = document.createElement("div");
         this._nextElem.addEventListener("click", this.next.bind(this));
         this._root.appendChild(this._nextElem);
+
         this._updatePage();
     }
+
     _updatePage() {
         this._pageElem.innerText = `${this._name} ${this.pageIndex + 1}/${this.pageCount}`;
+
         this._prevElem.className = this.pageIndex > 0 ? "hasMore" : "";
         this._nextElem.className = (this.pageIndex < this.pageCount - 1) ? "hasMore" : "";
     }
-    reset(pageCount, startPage = undefined) {
+
+    reset(pageCount: number, startPage: number | undefined = undefined) {
         this.pageCount = pageCount;
         if (!startPage) {
             startPage = Math.max(0, startPage - 1);
         }
+
         this.startPage = startPage;
         this.goto(startPage);
     }
-    goto(page) {
+
+    goto(page: number) {
         page = Math.max(0, Math.min(page, this.pageCount));
         const event = new PageEvent("change", page, "goto");
         if (this.dispatchEvent(event)) {
@@ -49,7 +77,8 @@ class Paginator extends EventTarget {
             this._updatePage();
         }
     }
-    prev(ev) {
+
+    prev(ev: PageEvent) {
         if (this.pageIndex > 0) {
             const event = new PageEvent("change", this.pageIndex - 1, "prev");
             if (this.dispatchEvent(event)) {
@@ -60,7 +89,8 @@ class Paginator extends EventTarget {
         ev.preventDefault();
         return false;
     }
-    next(ev) {
+
+    next(ev: PageEvent) {
         if (this.pageIndex < this.pageCount - 1) {
             const event = new PageEvent("change", this.pageIndex + 1, "next");
             if (this.dispatchEvent(event)) {

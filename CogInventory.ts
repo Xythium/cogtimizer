@@ -1,4 +1,3 @@
-"use strict";
 const ICON_QUALITY_MAP = {
     ["0"]: "Nooby",
     ["1"]: "Decent",
@@ -35,11 +34,57 @@ const YIN_MAP = {
     ["A02"]: "Yin_Bottom_Left_Cog",
     ["A03"]: "Yin_Bottom_Right_Cog"
 };
+const Crystal_MAP = {
+    ["0"]: "Topaz",
+    ["1"]: "Ruby",
+    ["2"]: "Amethyst",
+    ["3"]: "Garnet",
+    ["4"]: "Emerald",
+    ["5"]: "BlueGem"
+};
 const INV_ROWS = 8;
 const INV_COLUMNS = 12;
 const SPARE_START = 108;
+
+interface CogInitializer {
+    key;
+    icon;
+    buildRate;
+    isPlayer;
+    expGain;
+    flaggy;
+    expBonus;
+    buildRadiusBoost;
+    expRadiusBoost;
+    flaggyRadiusBoost;
+    boostRadius;
+    flagBoost;
+    nothing;
+    fixed;
+    blocked;
+}
+
 class Cog {
-    constructor(initialValues = {}) {
+    _key;
+    icon;
+    initialKey;
+    buildRate;
+    isPlayer;
+    isFlag;
+    expGain;
+    flaggy;
+    expBonus;
+    buildRadiusBoost;
+    expRadiusBoost;
+    flaggyRadiusBoost;
+    boostRadius;
+    flagBoost;
+    nothing;
+    fixed;
+    blocked;
+    _position;
+
+    constructor(initialValues: CogInitializer = {}) {
         this._key = initialValues.key;
         this.icon = initialValues.icon;
         this.initialKey = initialValues.initialKey !== undefined ? initialValues.initialKey : initialValues.key;
@@ -59,13 +104,16 @@ class Cog {
         this.blocked = initialValues.blocked;
         this._position = null;
     }
+
     get key() {
         return this._key;
     }
+
     set key(v) {
         this._position = null;
         this._key = Number.parseInt(v);
     }
+
     position(keyNum) {
         const isDefault = keyNum === undefined;
         if (this._position && isDefault) {
@@ -81,8 +129,7 @@ class Cog {
         if (location === "board") {
             perRow = INV_COLUMNS;
             offset = 0;
-        }
-        else if (location === "build") {
+        } else if (location === "build") {
             offset = 96;
         }
         const y = Math.floor((keyNum - offset) / perRow);
@@ -98,15 +145,21 @@ class Cog {
         return res;
     }
 }
+
 class FakeBoard {
+    inventory;
+    length;
+
     constructor(inventory) {
         this.inventory = inventory;
+
         this.length = INV_ROWS;
         this[Symbol.Iterator] = function* () {
             for (let s = 0; s < INV_ROWS; s++) {
                 yield s;
             }
         };
+
         for (let i = 0; i < INV_ROWS; i++) {
             const columnProxy = {
                 length: INV_COLUMNS,
@@ -128,7 +181,16 @@ class FakeBoard {
         }
     }
 }
+
 class CogInventory {
+    cogs;
+    slots;
+    flagPose;
+    flaggyShopUpgrades;
+    availableSlotKeys;
+    _score;
+    _board;
+
     constructor(cogs = {}, slots = {}) {
         this.cogs = cogs;
         this.slots = slots;
@@ -139,12 +201,15 @@ class CogInventory {
         // Saved for performance
         this._board = new FakeBoard(this);
     }
+
     get cogKeys() {
         return Object.keys(this.cogs);
     }
+
     get(key) {
         return this.cogs[key] || this.slots[key];
     }
+
     static _saveGet(arr, ...indexes) {
         while (indexes.length) {
             if (arr === undefined) {
@@ -154,10 +219,12 @@ class CogInventory {
         }
         return arr;
     }
+
     load(save) {
         this.availableSlotKeys = [];
         this._score = null;
         console.log("Loading");
+
         let foo = [];
         foo[1] = "Beginner"; // White
         foo[2] = "Journeyman";
@@ -176,6 +243,7 @@ class CogInventory {
         foo[32] = "Wizard";
         foo[33] = "Shaman";
         foo[34] = "Elemental Sorcerer";
+
         const hatIcons = {};
         const playerNames = save["playerNames"];
         if (playerNames) {
@@ -184,30 +252,29 @@ class CogInventory {
                 const classNameIndex = save[classNameSlot];
                 const className = foo[classNameIndex];
                 console.log(v, classNameIndex, className);
+
                 if (classNameIndex >= 31) {
                     // Mage
                     window.player._colorHead(.9, .77, 1);
-                }
-                else if (classNameIndex >= 19) {
+                } else if (classNameIndex >= 19) {
                     // Archer
                     window.player._colorHead(.58, 1, .6);
-                }
-                else if (classNameIndex >= 7) {
+                } else if (classNameIndex >= 7) {
                     // Warrior
                     window.player._colorHead(1, .77, .75);
-                }
-                else if (classNameIndex === 9) {
+                } else if (classNameIndex === 9) {
                     // Squire
                     window.player._colorHead(1, 1, 0);
-                }
-                else {
+                } else {
                     // Beginner
                     // Journeyman
                     window.player._colorHead(.5, .91, .92);
                 }
+
                 const equipmentSlot = `EquipOrder_${i}`;
                 const equipment = save[equipmentSlot];
                 let hatFound = false;
+
                 equipment.forEach((slots) => {
                     const length = slots.length;
                     for (let i = 0; i < length; i++) {
@@ -234,6 +301,7 @@ class CogInventory {
                 }
             });
         }
+
         // Fetch Gem-Shop flaggy upgrades
         this.flaggyShopUpgrades = JSON.parse(save["GemItemsPurchased"])[118];
         // Fetch the list of available cogs
@@ -245,24 +313,24 @@ class CogInventory {
             if (c === "Blank") {
                 icon.type = "blank";
                 icon.path = "assets/cog_blank.png";
-            }
-            else if (c.startsWith("Player")) {
+            } else if (c.startsWith("Player")) {
                 icon = hatIcons[c.substring(7)] || {
                     type: "head",
                     path: "icons/head.png"
                 };
-            }
-            else if (c === "CogY") {
+            } else if (c === "CogY") {
                 icon.type = "cog";
                 icon.path = "icons/cogs/Yang_Cog.png";
-            }
-            else {
+            } else if (c.startsWith("CogCry")) {
+                icon.type = "cog";
+                const parsed = c.match(/^CogCry([0-5])$/);
+                icon.path = "icons/cogs/" + "Crystal_" + Crystal_MAP[parsed[1]] + ".png";
+            } else {
                 icon.type = "cog";
                 const parsed = c.match(/^Cog([0123YZ])(.{2,3})$/);
                 if (parsed[1] === "Z") {
                     icon.path = "icons/cogs/" + YIN_MAP[parsed[2]] + ".png";
-                }
-                else {
+                } else {
                     icon.path = "icons/cogs/" + ICON_TYPE_MAP[parsed[2]] + "_" + ICON_QUALITY_MAP[parsed[1]] + ".png";
                 }
             }
@@ -324,8 +392,10 @@ class CogInventory {
         for (const cog of cogArray) {
             this.cogs[cog.key] = cog;
         }
+
         document.getElementById("notify").style.display = "none";
     }
+
     clone() {
         const c = {};
         for (let [k, v] of Object.entries(this.cogs)) {
@@ -341,13 +411,16 @@ class CogInventory {
         res.availableSlotKeys = [...this.availableSlotKeys];
         return res;
     }
+
     get board() {
         return this._board;
     }
+
     get score() {
         if (this._score !== null) {
             return this._score;
         }
+
         const result = {
             buildRate: 0,
             expBonus: 0,
@@ -355,10 +428,11 @@ class CogInventory {
             expBoost: 0,
             flagBoost: 0
         };
+
         const board = this.board;
         const bonusGrid = Array(INV_ROWS).fill(0).map(() => {
             return Array(INV_COLUMNS).fill(0).map(() => {
-                return { ...result };
+                return {...result};
             });
         });
         for (let key of this.availableSlotKeys) {
@@ -367,7 +441,10 @@ class CogInventory {
                 continue;
             }
             const boosted = [];
-            const { x: j, y: i } = entry.position();
+            const {
+                      x: j,
+                      y: i
+                  } = entry.position();
             switch (entry.boostRadius) {
                 case "diagonal":
                     boosted.push([i - 1, j - 1], [i - 1, j + 1], [i + 1, j - 1], [i + 1, j + 1]);
@@ -444,6 +521,7 @@ class CogInventory {
                 bonus.flagBoost += entry.flagBoost || 0;
             }
         }
+
         // Bonus grid done, now we can sum everything up
         for (let key of this.availableSlotKeys) {
             const entry = this.get(key);
@@ -469,6 +547,7 @@ class CogInventory {
         result.flaggy = Math.floor(result.flaggy * (1 + this.flaggyShopUpgrades * 0.5));
         return this._score = result;
     }
+
     move(pos1, pos2) {
         this._score = null;
         if (Array.isArray(pos1)) {
@@ -483,15 +562,13 @@ class CogInventory {
         this.cogs[pos2] = this.cogs[pos1];
         if (!this.cogs[pos2]) {
             delete this.cogs[pos2];
-        }
-        else {
+        } else {
             this.cogs[pos2].key = pos2;
         }
         this.cogs[pos1] = temp;
         if (!this.cogs[pos1]) {
             delete this.cogs[pos1];
-        }
-        else {
+        } else {
             this.cogs[pos1].key = pos1;
         }
     }
